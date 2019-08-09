@@ -1,0 +1,7 @@
+name: Site Api Configuration Update
+description: Update an api key for the site and display JSON representation of a given node 
+type: module
+package: custom
+core: 8.x
+dependencies:
+  - drupal:rest
