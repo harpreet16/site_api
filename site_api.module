@@ -1,0 +1,49 @@
+<?php
+
+/*
+ * Implements hook_form_FORM_ID_alter().
+ */
+function site_api_form_system_site_information_settings_alter(&$form, \Drupal\Core\Form\FormStateInterface $form_state, $form_id) {
+  //Insert an element for siteapikey in the form.
+	$form['siteapikey'] = [
+    '#type' => 'textfield',
+    '#title' => t("Site API Key"),
+    '#default_value' => !empty(\Drupal::config('system.site')->get('siteapikey')) ? \Drupal::config('system.site')->get('siteapikey') : 'No API Key yet',
+  ];
+  //Alter submit button text.
+  $form['#validate'][] = 'site_api_validate_form';
+  $form['actions']['submit']['#value'] = t('Update Configuration');
+  $form['#submit'][] = 'site_api_form_submit';
+}
+
+/*
+ * Custom validate function.
+ */
+function site_api_validate_form(&$form, &$form_state) {
+  $api_key = $form_state->getValue('siteapikey');
+  if ( preg_match('/\s/',$api_key) ) {
+    $form_state->setErrorByName('siteapikey', t('Please enter a valid api key without whitespace.'));
+  }
+}
+
+/*
+ * Implements hook_form_submit().
+ */
+function site_api_form_submit(&$form, &$form_state) {
+  $api_key = $form_state->getValue('siteapikey');
+  $config = \Drupal::service('config.factory')->getEditable('system.site');
+  // Set the api key.
+  $config->set('siteapikey', $api_key);
+  $config->save();
+  if (($config->get('siteapikey'))) { 
+    drupal_set_message($message = t('Site Api key '). $api_key. t(' has been saved'), $type = 'status', $repeat = FALSE);
+  }
+}
+
+/*
+ * Implements hook_uninstall().
+ */
+function site_api_uninstall() {
+  // Unset the variable siteapikey.
+  \Drupal::configFactory()->getEditable('system.site')->clear('siteapikey')->save();
+}
